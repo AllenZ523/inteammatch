@@ -3,10 +3,7 @@
 <head>
   <meta charset="utf-8">
   <meta name="viewport" content="width=device-width, initial-scale=1">
-
-  <!-- ★ 修改点 1：网页标题（浏览器标签上显示的） -->
-  <title>=78D13=联队文档中心</title>
-
+  <title>78D13 战争雷霆 队内赛规则</title>
   <link rel="preconnect" href="https://cdn.jsdelivr.net">
   <link href="https://cdn.jsdelivr.net/npm/github-markdown-css@5/github-markdown-light.min.css" rel="stylesheet">
   <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/katex@0.16.9/dist/katex.min.css">
@@ -77,7 +74,6 @@
       border: 1px solid rgba(217,169,65,.55);
       background: rgba(217,169,65,.08);
       clip-path: polygon(50% 0, 100% 25%, 100% 75%, 50% 100%, 0 75%, 0 25%);
-      flex: none;
     }
 
     .crest img, .section-crest img {
@@ -133,8 +129,6 @@
       margin-bottom: 12px;
     }
 
-    .sidebar-title + .sidebar-nav { margin-bottom: 18px; }
-
     .sidebar-nav { display: grid; gap: 7px; }
 
     .sidebar-nav a {
@@ -146,9 +140,6 @@
       background: rgba(255,255,255,.02);
       font-size: 13px;
       transition: .18s;
-      overflow: hidden;
-      text-overflow: ellipsis;
-      white-space: nowrap;
     }
 
     .sidebar-nav a.active, .sidebar-nav a:hover {
@@ -205,7 +196,7 @@
     }
 
     .section-panel { padding: 24px 30px 34px; }
-    #loading, #error, #empty-tip { padding: 34px 24px; color: var(--gold-2); text-align: center; }
+    #loading, #error { padding: 34px 24px; color: var(--gold-2); text-align: center; }
     #error { color: #f0a18a; }
 
     .markdown-body {
@@ -262,99 +253,43 @@
         <div class="crest"><img id="top-crest" src="icon.jpg" alt="78D13 队徽"></div>
         <div>
           <div class="kicker">War Thunder · Tactical Operations</div>
-          <!-- ★ 修改点 2：顶部大标题初始文字。JS 会用当前文档标题覆盖，这里只是兜底。 -->
-          <h1 id="top-title">78D13 文档中心</h1>
+          <h1>78D13 队内赛规则</h1>
         </div>
       </div>
       <div class="status">RULES ONLINE</div>
     </header>
 
     <aside class="sidebar">
-      <!-- ★ 修改点 3：这里是文档切换区，会自动生成；标题文字可改。 -->
-      <div class="sidebar-title">文件列表</div>
-      <nav id="doc-nav" class="sidebar-nav"></nav>
-
-      <div class="sidebar-title">当前部分</div>
+      <div class="sidebar-title">NAVIGATION</div>
       <nav id="nav" class="sidebar-nav"></nav>
     </aside>
 
     <main class="content">
       <div class="content-head">
-        <!-- ★ 修改点 4：这里是文档副标题/条令名，JS 会根据当前文档覆盖。 -->
-        <h2 id="head-title">文档正文</h2>
-        <div class="doc-meta" id="doc-meta">SOURCE / -</div>
+        <h2>作战条令</h2>
+        <div class="doc-meta">SOURCE / 队内赛规则.md</div>
       </div>
-      <div id="loading">正在加载文档…</div>
+      <div id="loading">正在加载规则文件…</div>
       <div id="error" hidden></div>
       <article id="doc" class="markdown-body" hidden></article>
     </main>
 
-    <!-- ★ 修改点 5：底部标语，随意改 -->
     <div class="footer-line">78D13 COMBAT REGULATIONS</div>
   </div>
 
   <script>
-    /* ★ 修改点 6（最重要）：文档映射表
-       每一项代表一个 Markdown 文档：
-       - 键名（match / training / exam）会出现在 URL 的 ?doc= 后面
-       - file：实际 Markdown 文件名，必须和服务器上的完全一致
-       - title：顶部大标题
-       - head：内容区左上角的条令名
-       想加文档？照抄一项改名字即可。
-    */
-    const DOC_MAP = {
-      match: {
-        file: '队内赛规则.md',
-        title: '78D13 队内赛规则',
-        head: '作战条令'
-      },
-      monitor: {
-        file: '裁判用.md',
-        title: '78D13 比赛裁判用文档',
-        head: '裁判条令'
-      },
-      to_moneyer: {
-        file: '赞助规则.md',
-        title: '78D13 比赛赞助规则',
-        head: '赞助规则'
-      },
-      when_cut_money_by_monitor: {
-        file:'裁判组一般奖金分配原则.md',
-        title: '78D13 裁判组一般奖金分配原则',
-        head: '裁判组一般奖金分配原则'
-      }
-      // ★ 需要更多文档就在这里继续加，例如：
-      // map: {
-      //   file: '地图池.md',
-      //   title: '78D13 地图池',
-      //   head: '战场部署'
-      // }
-    };
-
-    // ★ 修改点 7：队徽路径。所有页面共用一张图。
-    const crestSource = 'icon.jpg';
-
     const markdownEl = document.getElementById('doc');
     const loadingEl = document.getElementById('loading');
     const errorEl = document.getElementById('error');
     const navEl = document.getElementById('nav');
-    const docNavEl = document.getElementById('doc-nav');
-    const topTitleEl = document.getElementById('top-title');
-    const headTitleEl = document.getElementById('head-title');
-    const docMetaEl = document.getElementById('doc-meta');
+    const crestSource = 'icon.jpg';
 
     marked.use({ breaks: true, gfm: true });
 
-    // 从 URL 读取 ?doc=xxx，没写就用 DOC_MAP 里第一个
-    const keys = Object.keys(DOC_MAP);
-    const defaultKey = keys[0];
-    const currentKey = new URLSearchParams(location.search).get('doc') || defaultKey;
-    const cfg = DOC_MAP[currentKey] || DOC_MAP[defaultKey];
-
-    function renderError(msg) {
+    function renderError() {
       loadingEl.hidden = true;
       errorEl.hidden = false;
-      errorEl.textContent = msg || '规则文件加载失败。请通过 HTTP 服务打开本页面。';
+      errorEl.textContent = '规则文件加载失败。请通过本地 HTTP 服务打开本页面。';
     }
 
     function renderMath() {
@@ -390,21 +325,7 @@
       return crest;
     }
 
-    // 生成左侧“文档切换”列表
-    function renderDocNav(activeKey) {
-      docNavEl.innerHTML = '';
-      keys.forEach(k => {
-        const a = document.createElement('a');
-        a.href = `?doc=${encodeURIComponent(k)}`;
-        a.textContent = DOC_MAP[k].title;
-        if (k === activeKey) a.classList.add('active');
-        docNavEl.appendChild(a);
-      });
-    }
-
-    // 把 Markdown 渲染结果按 <h1> 拆分成多个 section，并生成右侧章节导航
     function buildProvisions() {
-      navEl.innerHTML = '';
       const headings = Array.from(markdownEl.querySelectorAll('h1'));
       const links = new Map();
 
@@ -447,14 +368,6 @@
         links.set(section, link);
       });
 
-      if (headings.length === 0) {
-        const tip = document.createElement('div');
-        tip.textContent = '当前文档没有一级标题（# 开头），侧边栏章节为空。';
-        tip.style.color = '#b9bfc7';
-        tip.style.fontSize = '13px';
-        navEl.appendChild(tip);
-      }
-
       const observer = new IntersectionObserver(entries => {
         entries.forEach(entry => {
           if (entry.isIntersecting) {
@@ -467,14 +380,8 @@
     }
 
     async function loadRules() {
-      // 先更新页面标题和 meta
-      document.title = cfg.title;
-      topTitleEl.textContent = cfg.title;
-      headTitleEl.textContent = cfg.head || '文档正文';
-      docMetaEl.textContent = `SOURCE / ${cfg.file}`;
-
       try {
-        const response = await fetch(cfg.file, { cache: 'no-store' });
+        const response = await fetch('队内赛规则.md', { cache: 'no-store' });
         if (!response.ok) throw new Error(response.statusText);
         const markdown = await response.text();
         markdownEl.innerHTML = marked.parse(markdown);
@@ -484,12 +391,11 @@
         renderMath();
       } catch (err) {
         console.error(err);
-        renderError(`无法加载 ${cfg.file}。请确认文件存在，且通过 HTTP 服务打开本页面。`);
+        renderError();
       }
     }
 
     applyCrestFallback(document.getElementById('top-crest'));
-    renderDocNav(currentKey);
     loadRules();
   </script>
 </body>
