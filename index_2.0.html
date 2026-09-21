@@ -1,6 +1,5 @@
 <!--更新日志 每次修改请更新更新日志
-当前版本：V2.1.0
-2.1.0更新日志：新增手机端适配，文件列表在顶部可自动隐藏；滚动方向控制显示。
+当前版本：V2.0.1
 2.0.1更新日志：新增了对于队长和MVP奖励机制的浏览。
 2.0.0更新日志：新增了侧边栏选择功能，将目前已有的md文件加入其中，均可在线阅览。
 -->
@@ -251,11 +250,6 @@
       background: linear-gradient(90deg, transparent, rgba(217,169,65,.4), transparent);
     }
 
-    /* ★ 新增：移动端固定顶部文件栏（默认桌面端隐藏） */
-    .mobile-file-bar {
-      display: none;
-    }
-
     @media (max-width: 860px) {
       .shell { grid-template-columns: 1fr; width: min(100% - 18px, 1380px); padding-top: 18px; }
       .sidebar { position: static; order: 2; }
@@ -263,73 +257,10 @@
       .section-panel { padding: 20px 18px 28px; }
       .topbar h1 { font-size: 18px; }
       .status { display: none; }
-
-      /* 移动端隐藏侧边栏里的“文件列表”，交给顶部固定栏显示 */
-      .sidebar > .sidebar-title:first-child,
-      .sidebar > #doc-nav {
-        display: none;
-      }
-
-      /* 顶部固定文件栏 */
-      .mobile-file-bar {
-        display: block;
-        position: fixed;
-        top: 0;
-        left: 0;
-        right: 0;
-        z-index: 200;
-        padding: 10px 12px;
-        background: linear-gradient(180deg, rgba(16,13,8,.98), rgba(20,17,12,.94));
-        border-bottom: 1px solid var(--border);
-        box-shadow: 0 6px 22px rgba(0,0,0,.55);
-        backdrop-filter: blur(10px);
-        transform: translateY(-110%);
-        transition: transform .28s cubic-bezier(.4,0,.2,1);
-      }
-
-      .mobile-file-bar.visible {
-        transform: translateY(0);
-      }
-
-      .mobile-doc-nav {
-        display: flex;
-        gap: 8px;
-        overflow-x: auto;
-        -webkit-overflow-scrolling: touch;
-        scrollbar-width: none;
-      }
-
-      .mobile-doc-nav::-webkit-scrollbar { display: none; }
-
-      .mobile-doc-nav a {
-        flex: none;
-        display: inline-block;
-        color: var(--text);
-        text-decoration: none;
-        padding: 8px 12px;
-        border: 1px solid rgba(217,169,65,.3);
-        background: rgba(255,255,255,.03);
-        font-size: 13px;
-        white-space: nowrap;
-        transition: .18s;
-      }
-
-      .mobile-doc-nav a.active,
-      .mobile-doc-nav a:active {
-        color: #fff;
-        border-color: var(--gold);
-        background: rgba(217,169,65,.18);
-      }
     }
   </style>
 </head>
 <body>
-
-  <!-- ★ 新增：移动端顶部固定文件栏，由 JS 根据滚动方向控制显示 -->
-  <div class="mobile-file-bar" id="mobile-file-bar">
-    <nav id="mobile-doc-nav" class="mobile-doc-nav"></nav>
-  </div>
-
   <div class="shell">
     <header class="topbar">
       <div class="brand">
@@ -344,7 +275,7 @@
     </header>
 
     <aside class="sidebar">
-      <!-- ★ 修改点 3：这里是文档切换区，会自动生成；标题文字可改。移动端此块会被隐藏，改用顶部固定栏。 -->
+      <!-- ★ 修改点 3：这里是文档切换区，会自动生成；标题文字可改。 -->
       <div class="sidebar-title">文件列表</div>
       <nav id="doc-nav" class="sidebar-nav"></nav>
 
@@ -370,9 +301,9 @@
   <script>
     /* ★ 修改点 6（最重要）：文档映射表
        每一项代表一个 Markdown 文档：
-       - 键名会出现在 URL 的 ?doc= 后面
+       - 键名（match / training / exam）会出现在 URL 的 ?doc= 后面
        - file：实际 Markdown 文件名，必须和服务器上的完全一致
-       - title：顶部大标题、移动端文件栏按钮文字
+       - title：顶部大标题
        - head：内容区左上角的条令名
        想加文档？照抄一项改名字即可。
     */
@@ -393,15 +324,21 @@
         head: '赞助规则'
       },
       when_cut_money_by_monitor: {
-        file: '裁判组一般奖金分配原则.md',
+        file:'裁判组一般奖金分配原则.md',
         title: '78D13 裁判组一般奖金分配原则',
         head: '裁判组一般奖金分配原则'
       },
-      things_give_MVP_and_captions: {
-        file: '队长及比赛MVP奖励机制.md',
+      things_give_MVP_and_captions:{
+        file:'队长及比赛MVP奖励机制.md',
         title: '78D13 队长及MVP奖励机制',
         head: 'MVP奖励机制'
       }
+      // ★ 需要更多文档就在这里继续加，例如：
+      // map: {
+      //   file: '地图池.md',
+      //   title: '78D13 地图池',
+      //   head: '战场部署'
+      // }
     };
 
     // ★ 修改点 7：队徽路径。所有页面共用一张图。
@@ -412,8 +349,6 @@
     const errorEl = document.getElementById('error');
     const navEl = document.getElementById('nav');
     const docNavEl = document.getElementById('doc-nav');
-    const mobileDocNavEl = document.getElementById('mobile-doc-nav');
-    const mobileBarEl = document.getElementById('mobile-file-bar');
     const topTitleEl = document.getElementById('top-title');
     const headTitleEl = document.getElementById('head-title');
     const docMetaEl = document.getElementById('doc-meta');
@@ -465,22 +400,19 @@
       return crest;
     }
 
-    // 生成左侧“文档切换”列表 + 移动端顶部文件栏
+    // 生成左侧“文档切换”列表
     function renderDocNav(activeKey) {
-      [docNavEl, mobileDocNavEl].forEach(container => {
-        if (!container) return;
-        container.innerHTML = '';
-        keys.forEach(k => {
-          const a = document.createElement('a');
-          a.href = `?doc=${encodeURIComponent(k)}`;
-          a.textContent = DOC_MAP[k].title;
-          if (k === activeKey) a.classList.add('active');
-          container.appendChild(a);
-        });
+      docNavEl.innerHTML = '';
+      keys.forEach(k => {
+        const a = document.createElement('a');
+        a.href = `?doc=${encodeURIComponent(k)}`;
+        a.textContent = DOC_MAP[k].title;
+        if (k === activeKey) a.classList.add('active');
+        docNavEl.appendChild(a);
       });
     }
 
-    // 把 Markdown 渲染结果按 <h1> 拆分成多个 section，并生成章节导航
+    // 把 Markdown 渲染结果按 <h1> 拆分成多个 section，并生成右侧章节导航
     function buildProvisions() {
       navEl.innerHTML = '';
       const headings = Array.from(markdownEl.querySelectorAll('h1'));
@@ -544,53 +476,6 @@
       links.forEach((_, section) => observer.observe(section));
     }
 
-    /* ★ 新增：移动端顶部文件栏的滚动显示/隐藏逻辑
-       规则：
-       - 页面在顶端附近（y <= 10）→ 始终显示
-       - 向下滚动（手指上滑）且已超过栏高度 → 隐藏
-       - 向上滚动（手指下滑）→ 显示
-    */
-    let lastScrollY = window.scrollY;
-
-    function handleMobileBarScroll() {
-      if (!mobileBarEl) return;
-
-      // 桌面端不处理
-      if (window.innerWidth > 860) {
-        mobileBarEl.classList.remove('visible');
-        return;
-      }
-
-      const y = window.scrollY;
-      const delta = y - lastScrollY;
-      const barHeight = mobileBarEl.offsetHeight || 64;
-
-      if (y <= 10) {
-        // 回到顶部，始终显示
-        mobileBarEl.classList.add('visible');
-      } else if (delta > 4 && y > barHeight) {
-        // 向下滚动，且滚出栏高度 → 隐藏
-        mobileBarEl.classList.remove('visible');
-      } else if (delta < -4) {
-        // 向上滚动 → 显示
-        mobileBarEl.classList.add('visible');
-      }
-
-      lastScrollY = y;
-    }
-
-    window.addEventListener('scroll', handleMobileBarScroll, { passive: true });
-
-    window.addEventListener('resize', () => {
-      if (window.innerWidth > 860) {
-        mobileBarEl.classList.remove('visible');
-      } else {
-        // 切换到移动端布局时，先显示出来
-        mobileBarEl.classList.add('visible');
-        lastScrollY = window.scrollY;
-      }
-    });
-
     async function loadRules() {
       // 先更新页面标题和 meta
       document.title = cfg.title;
@@ -616,12 +501,6 @@
     applyCrestFallback(document.getElementById('top-crest'));
     renderDocNav(currentKey);
     loadRules();
-
-    // 初始判断：移动端首次进入时显示顶部栏
-    if (window.innerWidth <= 860) {
-      mobileBarEl.classList.add('visible');
-      lastScrollY = window.scrollY;
-    }
   </script>
 </body>
 </html>
