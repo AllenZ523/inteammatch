@@ -1,5 +1,6 @@
 <!--更新日志 每次修改请更新更新日志
-当前版本：V2.1.0
+当前版本：V3.0.0
+3.0.0更新日志：新增文档中心首页，无参数时列出所有文档供选择；选择后再加载对应内容。
 2.1.0更新日志：新增手机端适配，文件列表在顶部可自动隐藏；滚动方向控制显示。
 2.0.1更新日志：新增了对于队长和MVP奖励机制的浏览。
 2.0.0更新日志：新增了侧边栏选择功能，将目前已有的md文件加入其中，均可在线阅览。
@@ -181,7 +182,34 @@
       font-size: 18px;
       letter-spacing: 2px;
     }
+    /* ★ 新增：内容区标题左侧容器 */
+    .content-head-left {
+      display: flex;
+      align-items: center;
+      gap: 14px;
+      min-width: 0;
+    }
 
+    /* ★ 新增：返回文档中心按钮 */
+    .back-home {
+      display: inline-flex;
+      align-items: center;
+      color: var(--gold);
+      text-decoration: none;
+      font-size: 13px;
+      padding: 6px 10px;
+      border: 1px solid rgba(217,169,65,.4);
+      background: rgba(217,169,65,.06);
+      white-space: nowrap;
+      transition: .18s;
+      clip-path: polygon(0 0, calc(100% - 8px) 0, 100% 8px, 100% 100%, 8px 100%, 0 calc(100% - 8px));
+    }
+
+    .back-home:hover {
+      color: #fff;
+      border-color: var(--gold);
+      background: rgba(217,169,65,.18);
+    }
     .doc-meta { color: var(--steel); font-size: 12px; }
 
     .match-section + .match-section {
@@ -232,7 +260,49 @@
     .markdown-body table tr { background: transparent; }
     .markdown-body table th { color: var(--gold-2); background: rgba(217,169,65,.11); }
     .katex { color: #fff; }
+    /* ★ 新增：首页文档卡片 */
+    .home-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(240px, 1fr));
+    gap: 14px;
+    padding: 22px 24px 32px;
+    }
 
+    .home-card {
+    display: block;
+    padding: 18px 18px 20px;
+    border: 1px solid rgba(217,169,65,.35);
+    background: linear-gradient(160deg, rgba(217,169,65,.08), rgba(217,169,65,.02));
+    color: var(--text);
+    text-decoration: none;
+    transition: .18s;
+    clip-path: polygon(0 0, calc(100% - 14px) 0, 100% 14px, 100% 100%, 14px 100%, 0 calc(100% - 14px));
+    }
+
+    .home-card:hover {
+    border-color: var(--gold);
+    background: linear-gradient(160deg, rgba(217,169,65,.18), rgba(217,169,65,.05));
+    transform: translateY(-2px);
+    }
+
+    .home-card-title {
+    color: #fff;
+    font-size: 16px;
+    margin-bottom: 8px;
+    letter-spacing: .5px;
+    }
+
+    .home-card-desc {
+    color: var(--steel);
+    font-size: 13px;
+    margin-bottom: 10px;
+    }
+
+    .home-card-file {
+    color: var(--gold);
+    font-size: 12px;
+    letter-spacing: 1px;
+    }
     .footer-line {
       grid-column: 1 / -1;
       display: flex;
@@ -321,6 +391,24 @@
         background: rgba(217,169,65,.18);
       }
     }
+    @media (max-width: 860px){
+      .content-head {
+        flex-direction: column;
+        align-items: flex-start;
+        gap: 10px;
+      }
+      .content-head-left {
+        width: 100%;
+        flex-wrap: wrap;
+      }
+      .back-home {
+        font-size: 12px;
+        padding: 5px 9px;
+      }
+      .content-head h2 {
+        font-size: 16px;
+      }
+    }
   </style>
 </head>
 <body>
@@ -353,15 +441,30 @@
     </aside>
 
     <main class="content">
-      <div class="content-head">
-        <!-- ★ 修改点 4：这里是文档副标题/条令名，JS 会根据当前文档覆盖。 -->
+  <!-- ★ 新增：首页视图（文档中心） -->
+  <div id="home-view">
+    <div class="content-head">
+      <h2>文档中心</h2>
+      <div class="doc-meta">请选择要浏览的文档</div>
+    </div>
+    <div class="home-grid" id="home-grid"></div>
+  </div>
+
+  <!-- ★ 新增：文档视图（原来的内容包起来） -->
+  <div id="doc-view" hidden>
+    <div class="content-head">
+      <div class="content-head-left">
+        <!-- ★ 新增：返回文档中心按钮 -->
+        <a href="./" class="back-home">← 返回文档中心</a>
         <h2 id="head-title">文档正文</h2>
-        <div class="doc-meta" id="doc-meta">SOURCE / -</div>
       </div>
-      <div id="loading">正在加载文档…</div>
-      <div id="error" hidden></div>
-      <article id="doc" class="markdown-body" hidden></article>
-    </main>
+    <div class="doc-meta" id="doc-meta">SOURCE / -</div>
+    </div>
+    <div id="loading">正在加载文档…</div>
+    <div id="error" hidden></div>
+    <article id="doc" class="markdown-body" hidden></article>
+  </div>
+  </main>
 
     <!-- ★ 修改点 5：底部标语，随意改 -->
     <div class="footer-line">78D13 COMBAT REGULATIONS</div>
@@ -417,15 +520,15 @@
     const topTitleEl = document.getElementById('top-title');
     const headTitleEl = document.getElementById('head-title');
     const docMetaEl = document.getElementById('doc-meta');
+    const homeView = document.getElementById('home-view');
+    const docView = document.getElementById('doc-view');
 
     marked.use({ breaks: true, gfm: true });
 
     // 从 URL 读取 ?doc=xxx，没写就用 DOC_MAP 里第一个
     const keys = Object.keys(DOC_MAP);
-    const defaultKey = keys[0];
-    const currentKey = new URLSearchParams(location.search).get('doc') || defaultKey;
-    const cfg = DOC_MAP[currentKey] || DOC_MAP[defaultKey];
-
+    const currentKey = new URLSearchParams(location.search).get('doc'); // ★ 可能为 null
+    const cfg = currentKey ? DOC_MAP[currentKey] : null;                // ★ 首页时为 null
     function renderError(msg) {
       loadingEl.hidden = true;
       errorEl.hidden = false;
@@ -479,7 +582,32 @@
         });
       });
     }
+    // ★ 新增：生成首页文档卡片
+    function renderHome() {
+      const homeGrid = document.getElementById('home-grid');
+      if (!homeGrid) return;
+      homeGrid.innerHTML = '';
 
+      keys.forEach(k => {
+        const c = DOC_MAP[k];
+        const card = document.createElement('a');
+        card.className = 'home-card';
+        card.href = `?doc=${encodeURIComponent(k)}`;
+        card.innerHTML = `
+          <div class="home-card-title">${c.title}</div>
+          <div class="home-card-desc">${c.head || ''}</div>
+          <div class="home-card-file">${c.file}</div>
+      `;
+      homeGrid.appendChild(card);
+      });
+      // ★ 新增：首页隐藏移动端顶部文件栏
+      if (mobileBarEl) mobileBarEl.classList.remove('visible');
+      // ★ 新增：首页隐藏侧边栏“当前部分”
+      const sidebarTitles = document.querySelectorAll('.sidebar-title');
+      if (sidebarTitles.length) sidebarTitles[sidebarTitles.length - 1].style.display = 'none';
+      navEl.style.display = 'none';
+    }
+    
     // 把 Markdown 渲染结果按 <h1> 拆分成多个 section，并生成章节导航
     function buildProvisions() {
       navEl.innerHTML = '';
@@ -560,6 +688,11 @@
         mobileBarEl.classList.remove('visible');
         return;
       }
+      // ★ 新增：首页（文档中心）不显示顶部栏
+      if (!document.getElementById('doc-view') || document.getElementById('doc-view').hidden) {
+        mobileBarEl.classList.remove('visible');
+        return;
+      }
 
       const y = window.scrollY;
       const delta = y - lastScrollY;
@@ -584,15 +717,16 @@
     window.addEventListener('resize', () => {
       if (window.innerWidth > 860) {
         mobileBarEl.classList.remove('visible');
-      } else {
-        // 切换到移动端布局时，先显示出来
+      } else if (docView && !docView.hidden) {
         mobileBarEl.classList.add('visible');
         lastScrollY = window.scrollY;
       }
     });
 
-    async function loadRules() {
-      // 先更新页面标题和 meta
+    async function loadDocument(key) {
+      const cfg = DOC_MAP[key];
+      if (!cfg) return;
+
       document.title = cfg.title;
       topTitleEl.textContent = cfg.title;
       headTitleEl.textContent = cfg.head || '文档正文';
@@ -613,12 +747,30 @@
       }
     }
 
+    
     applyCrestFallback(document.getElementById('top-crest'));
-    renderDocNav(currentKey);
-    loadRules();
+    renderDocNav(currentKey); // currentKey 可能为 null，不高亮，正常
 
-    // 初始判断：移动端首次进入时显示顶部栏
-    if (window.innerWidth <= 860) {
+    if (currentKey && DOC_MAP[currentKey]) {
+      // ★ 有 ?doc= → 进入文档视图
+      homeView.hidden = true;
+      docView.hidden = false;
+      // ★ 新增：恢复侧边栏“当前部分”
+      const sidebarTitles = document.querySelectorAll('.sidebar-title');
+      if (sidebarTitles.length) sidebarTitles[sidebarTitles.length - 1].style.display = '';
+      navEl.style.display = '';
+      loadDocument(currentKey);
+    } else {
+      // ★ 无参数 → 进入首页（文档中心）
+      homeView.hidden = false;
+      docView.hidden = true;
+      renderHome();
+      document.title = '78D13 联队文档中心';
+      topTitleEl.textContent = '78D13 文档中心';
+    }
+
+    // 移动端首次进入顶部栏显示（★ 修改：仅在文档视图显示）
+    if (window.innerWidth <= 860 && currentKey && DOC_MAP[currentKey]) {
       mobileBarEl.classList.add('visible');
       lastScrollY = window.scrollY;
     }
